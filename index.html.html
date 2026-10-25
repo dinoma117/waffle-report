@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f5f5f3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="와플매출">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23ffe45c'/%3E%3Ctext x='90' y='112' text-anchor='middle' font-size='88'%3E%F0%9F%A7%87%3C/text%3E%3C/svg%3E">
+<title>와플대학 매출 보고 생성기</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: linear-gradient(180deg, #fbfaf6 0%, #f2f1eb 100%);
+  min-height: 100vh;
+  padding: calc(0.9rem + env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) calc(1.2rem + env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+  color: #1a1a1a;
+}
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.card {
+  background: rgba(255,255,255,0.94);
+  border-radius: 22px;
+  padding: 1.15rem;
+  box-shadow: 0 14px 40px rgba(28, 28, 28, 0.08);
+  backdrop-filter: blur(10px);
+}
+.hero {
+  margin-bottom: 1rem;
+  padding: 1rem 1rem 0.2rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff3a8 0%, #fff8d4 58%, #ffffff 100%);
+  border: 1px solid #f3e4a6;
+}
+.hero-title {
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.section {
+  margin-bottom: 1.3rem;
+}
+.section-title {
+  font-size: 12px;
+  color: #8a815f;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.panel {
+  background: #fcfcfa;
+  border: 1px solid #efede2;
+  border-radius: 16px;
+  padding: 12px;
+}
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.field-label { font-size: 11px; color: #9d9782; margin-bottom: 4px; font-weight: 600; }
+input[type=text], input[type=date], textarea, button { font-family: inherit; }
+.input, .date-input, .name-input, .qty-input {
+  width: 100%;
+  border: 1px solid #e4e1d7;
+  border-radius: 12px;
+  background: #fff;
+  color: #1a1a1a;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.input, .date-input {
+  padding: 12px 12px;
+  font-size: 15px;
+}
+.name-input, .qty-input {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.input:focus, .date-input:focus, .name-input:focus, .qty-input:focus, .output-box:focus {
+  border-color: #d4b545;
+  box-shadow: 0 0 0 4px rgba(255, 228, 92, 0.18);
+}
+.num-input, .qty-input { text-align: right; }
+.amount-tip {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffaf0;
+  border: 1px solid #f2e2a3;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7a6840;
+}
+hr { border: none; border-top: 1px solid #f0eee4; margin: 1.3rem 0; }
+.category-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.category-title { font-size: 14px; font-weight: 800; color: #403a2c; }
+.category-count {
+  font-size: 11px;
+  color: #8c8463;
+  background: #f4f1e5;
+  border: 1px solid #ece5c7;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+.col-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 42px;
+  gap: 8px;
+  font-size: 11px;
+  color: #b2ab97;
+  padding: 0 4px 5px;
+  border-bottom: 1px solid #f1efe6;
+  margin-bottom: 6px;
+}
+.col-header span:nth-child(2) { text-align: right; }
+.menu-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 42px;
+  gap: 8px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.fixed-name {
+  min-width: 0;
+  font-size: 14px;
+  color: #333;
+  padding: 10px 12px;
+  background: #f9f8f3;
+  border: 1px solid #ece8d9;
+  border-radius: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.remove-btn, .secondary-btn, .add-btn, .generate-btn, .copy-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.remove-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #e5dfcf;
+  border-radius: 12px;
+  background: #fff;
+  color: #b8ad8c;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.add-btn {
+  width: 100%;
+  padding: 11px 12px;
+  margin-top: 8px;
+  border: 1px dashed #d6ceb6;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6c6247;
+}
+.add-btn:active, .generate-btn:active, .secondary-btn:active, .copy-btn:active, .remove-btn:active {
+  transform: scale(0.985);
+}
+.generate-btn, .secondary-btn {
+  width: 100%;
+  padding: 14px 14px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 14px;
+  border: none;
+}
+.menu-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.utility-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.generate-btn {
+  margin-top: 8px;
+  background: linear-gradient(135deg, #1c1c1c 0%, #333333 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(28, 28, 28, 0.18);
+}
+.secondary-btn {
+  background: #f7f6f1;
+  color: #55503f;
+  border: 1px solid #e9e5d7;
+}
+.output-wrap {
+  margin-top: 1.45rem;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff8d1 0%, #fffdf3 48%, #ffffff 100%);
+  border: 1px solid #f0e1a0;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
+.output-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.output-title {
+  color: #6d5b18;
+  font-size: 13px;
+  font-weight: 800;
+}
+.output-status {
+  font-size: 11px;
+  color: #8d7740;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid #efdf9f;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+.output-hint {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #75642e;
+  background: rgba(255,255,255,0.82);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #efe2b1;
+}
+.output-box {
+  width: 100%;
+  min-height: 260px;
+  background: #fff;
+  border: 2px solid #f1e09f;
+  border-radius: 14px;
+  padding: 1rem 1.05rem;
+  font-size: 15px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  color: #1a1a1a;
+  resize: vertical;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.copy-actions {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.copy-btn {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 14px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.copy-btn.primary { background: #ffe45c; color: #2e2400; }
+.copy-btn.secondary { background: #fff; color: #555; border: 1px solid #eadfbc; }
+.bottom-tip {
+  margin-top: 14px;
+  padding: 12px 13px;
+  border-radius: 14px;
+  background: #f9f8f3;
+  border: 1px solid #eeeadb;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #77705b;
+}
+@media (max-width: 640px) {
+  .card { padding: 1rem; border-radius: 18px; }
+  .hero { padding: 0.95rem 0.95rem 0.25rem; }
+  .hero-title { font-size: 20px; }
+  .quick-guide, .input-row, .input-row-3, .copy-actions, .menu-actions, .utility-actions { grid-template-columns: 1fr; }
+  .output-box { min-height: 300px; font-size: 16px; }
+  .copy-btn, .generate-btn, .secondary-btn { min-height: 58px; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="card">
+    <div class="hero">
+      <div class="hero-title">와플대학 매출 보고 생성기</div>      
+    </div>
+
+    <div class="section">
+      <div class="section-title">기본 정보</div>
+      <div class="panel">
+        <div class="input-row">
+          <div>
+            <div class="field-label">지점명</div>
+            <input type="text" id="store" class="input" placeholder="선릉점">
+          </div>
+          <div>
+            <div class="field-label">날짜</div>
+            <input type="date" id="date" class="date-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">매출 요약</div>
+      <div class="panel">
+        <div class="input-row-3">
+          <div>
+            <div class="field-label">총 매출 (원)</div>
+            <input type="text" id="total" class="input num-input money-input" inputmode="numeric" pattern="[0-9,]*" placeholder="0">
+          </div>
+          <div>
+            <div class="field-label">내점 (원)</div>
+            <input type="text" id="instore" class="input num-input money-input" inputmode="numeric" pattern="[0-9,]*" placeholder="0">
+          </div>
+          <div>
+            <div class="field-label">배달 (원)</div>
+            <input type="text" id="delivery" class="input num-input money-input" inputmode="numeric" pattern="[0-9,]*" placeholder="0">
+          </div>
+        </div>
+        <div class="amount-tip">총매출은 직접 입력한 값만 보고서에 반영됩니다. 작성 중인 내용은 기기 안에 자동으로 임시 저장됩니다.</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <div class="section-title">메뉴 입력</div>
+      <div class="panel">
+        <div class="category-head">
+          <div class="category-title">신메뉴 판매</div>
+          <div class="category-count" id="count-new">0개 항목</div>
+        </div>
+        <div class="col-header"><span>메뉴명</span><span>수량(개)</span><span></span></div>
+        <div id="new-list"></div>
+        <button type="button" class="add-btn" data-add-category="new">+ 신메뉴 항목 추가</button>
+      </div>
+    </div>
+
+    <div class="menu-actions">
+      <button type="button" class="secondary-btn" id="save-menu-btn">메뉴 저장</button>
+      <button type="button" class="secondary-btn" id="load-menu-btn">메뉴 불러오기</button>
+    </div>
+    <div class="utility-actions">
+      <button type="button" class="secondary-btn" id="reset-menu-btn">메뉴 초기화</button>
+      <button type="button" class="secondary-btn" id="clear-today-btn">오늘 입력 초기화</button>
+    </div>
+
+    <button type="button" class="generate-btn" id="generate-btn">카톡 보고 생성하기</button>
+
+    <div class="output-wrap" id="output-wrap" style="display:none;">
+      <div class="output-top">
+        <div class="output-title">카카오톡 공유용</div>
+        <div class="output-status">생성 완료 후 바로 복사</div>
+      </div>
+      <div class="output-hint">복사가 바로 안 되면 전체선택 버튼을 누른 뒤 길게 눌러 복사하면 됩니다. 아이폰에서도 최대한 안정적으로 동작하도록 예비 복사 방식까지 넣어두었습니다.</div>
+      <textarea class="output-box" id="output-text" readonly></textarea>
+      <div class="copy-actions">
+        <button type="button" class="copy-btn primary" id="copy-btn">📋 내용 복사하기</button>
+        <button type="button" class="copy-btn secondary" id="select-btn">✍️ 전체선택</button>
+      </div>
+    </div>
+
+    <div class="bottom-tip">사파리에서 열었다면 공유 버튼 → 홈 화면에 추가를 누르면 앱처럼 빠르게 열 수 있습니다. 작성 내용은 자동 임시저장되고, 추가한 메뉴는 메뉴 저장 / 불러오기 버튼으로 보관할 수 있습니다. 메뉴 초기화는 추가한 메뉴 구성을 기본값으로 되돌리고, 오늘 입력 초기화는 오늘 입력한 금액/수량/출력만 비웁니다.</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'waffle_report_mobile_clean_v2';
+  var MENU_STORAGE_KEY = 'waffle_report_mobile_clean_menu_v2';
+  var initialMenus = {
+    'new': ['우베스노우와플','우베젤라또와플','우베젤라또컵','우베코코넛라떼','우베코코넛콜드브루라떼','쫀떡쌀젤라또컵','꿀떡쌀젤라또컵','딸바누텔라젤라또와플','토피토피넛젤라또와플','깍두기젤라또와플','시그니처콜드브루','시그니처콜드브루라떼']
+  };
+
+  var state = {
+    'new': createFixedItems(initialMenus['new'])
+  };
+
+  function createFixedItems(list) {
+    var result = [];
+    var i;
+    for (i = 0; i < list.length; i++) {
+      result.push({ name: list[i], qty: 0, fixed: true });
+    }
+    return result;
+  }
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function getDigits(value) {
+    return String(value == null ? '' : value).replace(/[^0-9]/g, '');
+  }
+
+  function toNumber(value) {
+    var digits = getDigits(value);
+    return digits ? parseInt(digits, 10) : 0;
+  }
+
+  function formatNum(value) {
+    var num = Number(value) || 0;
+    try {
+      return num.toLocaleString('ko-KR');
+    } catch (e) {
+      return String(num);
+    }
+  }
+
+  function formatMoneyInput(el) {
+    if (!el) return;
+    var digits = getDigits(el.value);
+    el.value = digits ? formatNum(digits) : '';
+  }
+
+  function getLocalDateString() {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = ('0' + (now.getMonth() + 1)).slice(-2);
+    var day = ('0' + now.getDate()).slice(-2);
+    return year + '-' + month + '-' + day;
+  }
+
+  function setDefaultDate() {
+    var dateEl = byId('date');
+    if (dateEl && !dateEl.value) {
+      dateEl.value = getLocalDateString();
+    }
+  }
+
+  function getDay(dateText) {
+    return ['일','월','화','수','목','금','토'][new Date(dateText).getDay()];
+  }
+
+  function updateCategoryCounts() {
+    var cats = ['new'];
+    var i;
+    for (i = 0; i < cats.length; i++) {
+      var cat = cats[i];
+      var countEl = byId('count-' + cat);
+      if (countEl) {
+        countEl.textContent = (state[cat] ? state[cat].length : 0) + '개 항목';
+      }
+    }
+  }
+
+  function sortItems(cat) {
+    var original = state[cat] || [];
+    var copied = [];
+    var i;
+    for (i = 0; i < original.length; i++) {
+      copied.push({
+        name: original[i].name,
+        qty: Number(original[i].qty) || 0,
+        fixed: !!original[i].fixed,
+        origIdx: i
+      });
+    }
+    copied.sort(function (a, b) {
+      return (Number(b.qty) || 0) - (Number(a.qty) || 0);
+    });
+    return copied;
+  }
+
+  function renderCategory(cat) {
+    var container = byId(cat + '-list');
+    var list = sortItems(cat);
+    var i;
+    var html = '';
+
+    for (i = 0; i < list.length; i++) {
+      var item = list[i];
+      html += '<div class="menu-item">';
+      if (item.fixed) {
+        html += '<div class="fixed-name" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + '</div>';
+      } else {
+        html += '<input type="text" class="name-input" data-role="name" data-cat="' + cat + '" data-idx="' + item.origIdx + '" placeholder="메뉴명" value="' + escapeHtml(item.name) + '">';
+      }
+      html += '<input type="text" class="qty-input" inputmode="numeric" pattern="[0-9]*" data-role="qty" data-cat="' + cat + '" data-idx="' + item.origIdx + '" placeholder="0" value="' + (item.qty ? item.qty : '') + '">';
+      html += '<button type="button" class="remove-btn" data-role="remove" data-cat="' + cat + '" data-idx="' + item.origIdx + '" title="삭제">×</button>';
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  function renderAll() {
+    renderCategory('new');
+    updateCategoryCounts();
+  }
+
+  function addItem(cat) {
+    if (!state[cat]) state[cat] = [];
+    state[cat].push({ name: '', qty: 0, fixed: false });
+    renderAll();
+  }
+
+  function removeItem(cat, idx) {
+    if (!state[cat]) return;
+    state[cat].splice(idx, 1);
+    renderAll();
+  }
+
+  function buildReportText() {
+    var store = byId('store').value || '지점';
+    var dateVal = byId('date').value || getLocalDateString();
+    var dateParts = dateVal.split('-');
+    var month = parseInt(dateParts[1] || '1', 10);
+    var day = parseInt(dateParts[2] || '1', 10);
+    var dateLabel = month + '월 ' + day + '일(' + getDay(dateVal) + ')';
+    var total = toNumber(byId('total').value);
+    var instore = toNumber(byId('instore').value);
+    var delivery = toNumber(byId('delivery').value);
+    var lines = [];
+    var allItems = [];
+    var best = [];
+    var totalSold = 0;
+    var i;
+
+    lines.push('《' + store + ' ' + dateLabel + ' 매출》');
+    lines.push('');
+    lines.push('💰 총 매출: ' + formatNum(total) + '원');
+    lines.push('  ∙ 내점: ' + formatNum(instore) + '원');
+    lines.push('  ∙ 배달: ' + formatNum(delivery) + '원');
+
+    function appendCategory(label, cat) {
+      var source = state[cat] || [];
+      var active = [];
+      var zero = [];
+      var item;
+      var j;
+
+      for (j = 0; j < source.length; j++) {
+        item = source[j];
+        if (!item.name) continue;
+        if ((Number(item.qty) || 0) > 0) {
+          active.push(item);
+        } else {
+          zero.push(item);
+        }
+        allItems.push(item);
+      }
+
+      if (!active.length && !zero.length) return;
+      active.sort(function (a, b) { return (Number(b.qty) || 0) - (Number(a.qty) || 0); });
+
+      lines.push('');
+      lines.push('▸ ' + label);
+
+      var combined = active.concat(zero);
+      for (j = 0; j < combined.length; j++) {
+        lines.push('  • ' + combined[j].name + ': ' + (Number(combined[j].qty) || 0) + '개');
+      }
+    }
+
+    appendCategory('신메뉴', 'new');
+
+    for (i = 0; i < allItems.length; i++) {
+      totalSold += Number(allItems[i].qty) || 0;
+      if ((Number(allItems[i].qty) || 0) > 0) {
+        best.push(allItems[i]);
+      }
+    }
+
+    best.sort(function (a, b) { return (Number(b.qty) || 0) - (Number(a.qty) || 0); });
+    best = best.slice(0, 3);
+
+    if (best.length) {
+      lines.push('');
+      lines.push('🏆 베스트 메뉴');
+      for (i = 0; i < best.length; i++) {
+        lines.push('  ' + (i + 1) + '위 ' + best[i].name + ' (' + (Number(best[i].qty) || 0) + '개)');
+      }
+    }
+
+    lines.push('');
+    lines.push('📦 총 판매: ' + formatNum(totalSold) + '개');
+
+    return lines.join('\n');
+  }
+
+  function autoResizeOutput() {
+    var el = byId('output-text');
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 260) + 'px';
+  }
+
+  function selectOutputText() {
+    var el = byId('output-text');
+    if (!el) return;
+    el.focus();
+    el.select();
+    if (el.setSelectionRange) {
+      el.setSelectionRange(0, el.value.length);
+    }
+  }
+
+  function flashCopyButton(message) {
+    var btn = byId('copy-btn');
+    btn.textContent = message;
+    setTimeout(function () {
+      btn.textContent = '📋 내용 복사하기';
+    }, 2200);
+  }
+
+  function fallbackCopy(text) {
+    selectOutputText();
+    try {
+      if (document.execCommand && document.execCommand('copy')) {
+        flashCopyButton('✓ 복사됨!');
+        return true;
+      }
+    } catch (e) {}
+
+    var temp = document.createElement('textarea');
+    temp.value = text;
+    temp.setAttribute('readonly', 'readonly');
+    temp.style.position = 'fixed';
+    temp.style.top = '-9999px';
+    temp.style.opacity = '0';
+    document.body.appendChild(temp);
+    temp.focus();
+    temp.select();
+    if (temp.setSelectionRange) {
+      temp.setSelectionRange(0, temp.value.length);
+    }
+
+    var copied = false;
+    try {
+      copied = document.execCommand && document.execCommand('copy');
+    } catch (e2) {}
+
+    document.body.removeChild(temp);
+
+    if (copied) {
+      flashCopyButton('✓ 복사됨!');
+      return true;
+    }
+    return false;
+  }
+
+  function copyText() {
+    var text = byId('output-text').value;
+    if (!text) {
+      alert('먼저 카톡 보고를 생성해주세요.');
+      return;
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        flashCopyButton('✓ 복사됨!');
+      }).catch(function () {
+        if (!fallbackCopy(text)) {
+          selectOutputText();
+          flashCopyButton('전체선택 완료');
+          alert('자동 복사가 제한된 환경입니다. 선택된 내용을 길게 눌러 복사해주세요.');
+        }
+      });
+      return;
+    }
+
+    if (!fallbackCopy(text)) {
+      selectOutputText();
+      flashCopyButton('전체선택 완료');
+      alert('자동 복사가 제한된 환경입니다. 선택된 내용을 길게 눌러 복사해주세요.');
+    }
+  }
+
+  function generate() {
+    var text = buildReportText();
+    byId('output-text').value = text;
+    byId('output-wrap').style.display = 'block';
+    autoResizeOutput();
+    selectOutputText();
+    saveDraft();
+  }
+
+  function saveMenuData() {
+    try {
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(state));
+      saveDraft();
+      alert('메뉴가 저장되었습니다.');
+    } catch (e) {
+      alert('이 환경에서는 메뉴 저장이 제한될 수 있습니다.');
+    }
+  }
+
+  function loadMenuData() {
+    var saved = null;
+    try {
+      saved = localStorage.getItem(MENU_STORAGE_KEY);
+    } catch (e) {
+      alert('이 환경에서는 저장된 메뉴를 불러올 수 없습니다.');
+      return;
+    }
+
+    if (!saved) {
+      alert('저장된 메뉴가 없습니다.');
+      return;
+    }
+
+    try {
+      state = sanitizeLoadedState(JSON.parse(saved));
+      renderAll();
+      saveDraft();
+      alert('메뉴를 불러왔습니다.');
+    } catch (e2) {
+      alert('불러오기 실패');
+    }
+  }
+
+  function resetMenuData() {
+    var ok = window.confirm('메뉴 구성을 기본값으로 초기화할까요? 추가한 메뉴와 현재 수량이 초기화됩니다.');
+    if (!ok) return;
+
+    state = {
+      'new': createFixedItems(initialMenus['new'])
+    };
+    renderAll();
+    saveDraft();
+    alert('메뉴가 기본값으로 초기화되었습니다.');
+  }
+
+  function clearTodayInputs() {
+    var ok = window.confirm('오늘 입력한 금액, 수량, 생성 결과를 초기화할까요? 메뉴 구성은 유지됩니다.');
+    if (!ok) return;
+
+    byId('date').value = getLocalDateString();
+    byId('total').value = '';
+    byId('instore').value = '';
+    byId('delivery').value = '';
+
+    var cats = ['new'];
+    var i;
+    var j;
+    for (i = 0; i < cats.length; i++) {
+      if (!state[cats[i]]) continue;
+      for (j = 0; j < state[cats[i]].length; j++) {
+        state[cats[i]][j].qty = 0;
+      }
+    }
+
+    byId('output-text').value = '';
+    byId('output-wrap').style.display = 'none';
+    renderAll();
+    saveDraft();
+    alert('오늘 입력이 초기화되었습니다.');
+  }
+
+  function sanitizeLoadedState(loaded) {
+    var result = { 'new': [] };
+    var cats = ['new'];
+    var i;
+    var j;
+    var item;
+
+    for (i = 0; i < cats.length; i++) {
+      if (!loaded || !loaded[cats[i]] || !loaded[cats[i]].length) {
+        result[cats[i]] = createFixedItems(initialMenus[cats[i]]);
+        continue;
+      }
+
+      for (j = 0; j < loaded[cats[i]].length; j++) {
+        item = loaded[cats[i]][j] || {};
+        result[cats[i]].push({
+          name: item.name || '',
+          qty: Number(item.qty) || 0,
+          fixed: !!item.fixed
+        });
+      }
+    }
+
+    return result;
+  }
+
+  function saveDraft() {
+    var payload = {
+      store: byId('store').value || '',
+      date: byId('date').value || '',
+      total: byId('total').value || '',
+      instore: byId('instore').value || '',
+      delivery: byId('delivery').value || '',
+      state: state,
+      output: byId('output-text').value || ''
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  function restoreDraft() {
+    var saved = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      return;
+    }
+    if (!saved) return;
+
+    try {
+      var parsed = JSON.parse(saved);
+      byId('store').value = parsed.store || '';
+      byId('date').value = parsed.date || getLocalDateString();
+      byId('total').value = parsed.total || '';
+      byId('instore').value = parsed.instore || '';
+      byId('delivery').value = parsed.delivery || '';
+      state = sanitizeLoadedState(parsed.state || state);
+      if (parsed.output) {
+        byId('output-text').value = parsed.output;
+        byId('output-wrap').style.display = 'block';
+      }
+    } catch (e2) {}
+  }
+
+  function bindTopInputs() {
+    var moneyInputs = document.querySelectorAll('.money-input');
+    var i;
+    for (i = 0; i < moneyInputs.length; i++) {
+      moneyInputs[i].addEventListener('input', function () {
+        formatMoneyInput(this);
+        saveDraft();
+      });
+      moneyInputs[i].addEventListener('blur', function () {
+        formatMoneyInput(this);
+        saveDraft();
+      });
+    }
+
+    byId('store').addEventListener('input', saveDraft);
+    byId('date').addEventListener('change', saveDraft);
+  }
+
+  function bindButtons() {
+    byId('save-menu-btn').addEventListener('click', saveMenuData);
+    byId('load-menu-btn').addEventListener('click', loadMenuData);
+    byId('reset-menu-btn').addEventListener('click', resetMenuData);
+    byId('clear-today-btn').addEventListener('click', clearTodayInputs);
+    byId('generate-btn').addEventListener('click', generate);
+    byId('copy-btn').addEventListener('click', copyText);
+    byId('select-btn').addEventListener('click', function () {
+      selectOutputText();
+      flashCopyButton('전체선택 완료');
+    });
+
+    var addButtons = document.querySelectorAll('[data-add-category]');
+    var i;
+    for (i = 0; i < addButtons.length; i++) {
+      addButtons[i].addEventListener('click', function () {
+        addItem(this.getAttribute('data-add-category'));
+        saveDraft();
+      });
+    }
+  }
+
+  function bindMenuDelegation() {
+    document.addEventListener('input', function (event) {
+      var target = event.target;
+      var role = target.getAttribute('data-role');
+      var cat = target.getAttribute('data-cat');
+      var idx = target.getAttribute('data-idx');
+
+      if (!role || !cat || idx === null) return;
+      idx = parseInt(idx, 10);
+      if (!state[cat] || !state[cat][idx]) return;
+
+      if (role === 'name') {
+        state[cat][idx].name = target.value;
+        saveDraft();
+        return;
+      }
+
+      if (role === 'qty') {
+        target.value = getDigits(target.value);
+        state[cat][idx].qty = parseInt(target.value || '0', 10) || 0;
+        saveDraft();
+      }
+    });
+
+    document.addEventListener('change', function (event) {
+      var target = event.target;
+      if (target.getAttribute('data-role') === 'qty') {
+        renderAll();
+        saveDraft();
+      }
+    });
+
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      if (target.getAttribute('data-role') === 'remove') {
+        removeItem(target.getAttribute('data-cat'), parseInt(target.getAttribute('data-idx'), 10));
+        saveDraft();
+      }
+    });
+  }
+
+  function init() {
+    setDefaultDate();
+    restoreDraft();
+    bindTopInputs();
+    bindButtons();
+    bindMenuDelegation();
+    renderAll();
+    autoResizeOutput();
+    window.addEventListener('resize', autoResizeOutput);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
